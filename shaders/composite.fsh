@@ -1,5 +1,7 @@
 #version 330 compatibility
 #include "/libs/shadowDistort.glsl"
+#define SHADOW_RADIUS 1
+#define SHADOW_RANGE 3
 
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
@@ -42,6 +44,10 @@ vec3 getShadow(vec3 shadowScreenPos) {
 	return shadowColor.rgb * (1.0 - shadowColor.a);
 }
 
+vec3 getSoftShadow(vec4 shadowClipPos) {
+	color = color;
+}
+
 void main() {
 	vec2 lightmap = texture(colortex1, texcoord).xy;
 	vec3 normal = normalize(texture(colortex2, texcoord).rgb * 2.0 - 1.0);
@@ -58,8 +64,8 @@ void main() {
 	vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
 	vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
   	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.z -= 0.001; 
 	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
+	shadowClipPos.z -= 0.001; 
   	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
   	vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
 	vec3 shadow = getShadow(shadowScreenPos);
