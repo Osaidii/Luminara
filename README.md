@@ -1,5 +1,5 @@
-# Luminara
-Presenting Luminara!   
+# Ziran
+Presenting Ziran Shaders!   
 A Minecraft Shader that is extremely optimized for low-end pcs but it runs very well on high-end pcs as well!  
 This is my first Minecraft related project!  
 This Shaderpack requires Iris Shaders mod to function properly.  
