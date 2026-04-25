@@ -20,6 +20,7 @@ const vec3 blocklightColor = vec3(1.0, 0.5, 0.08);
 const vec3 skylightColor = vec3(0.05, 0.15, 0.3);
 const vec3 sunlightColor = vec3(1.0);
 const vec3 ambientColor = vec3(0.1);
+const float shadowDistanceRenderMul = 1.0;
 
 in vec2 texcoord;
 
@@ -45,7 +46,26 @@ vec3 getShadow(vec3 shadowScreenPos) {
 }
 
 vec3 getSoftShadow(vec4 shadowClipPos) {
-	color = color;
+	vec3 shadowAccum = vec3(0.0);
+	const int samples = (2 * SHADOW_RANGE) * (2 * SHADOW_RANGE);
+	for (int x = -SHADOW_RANGE; x < SHADOW_RANGE; x++) {
+		for (int y = -SHADOW_RANGE; y < SHADOW_RANGE; y++) {
+			vec2 offset = vec2(x, y) * SHADOW_RADIUS / float(SHADOW_RANGE);
+			offset /= 2048;
+			vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
+			offsetShadowClipPos.xyz = distortShadowClipPos(offsetShadowClipPos.xyz);
+			vec3 shadowNdcPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
+			vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
+			shadowAccum += getShadow(shadowScreenPos);
+		}
+	}
+	return shadowAccum / float(samples);
+}
+
+vec4 getNoise(vec2 coord) {
+	ivec2 screenCoord = ivec2(coord * vec2(viewWidth, viewHeight));
+	ivec2 noiseCoord = screenCoord % 64;
+	return texelFetch(noisetex, noiseCoord, 0);
 }
 
 void main() {
@@ -64,11 +84,11 @@ void main() {
 	vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
 	vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
   	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
 	shadowClipPos.z -= 0.001; 
+	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
   	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
   	vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
-	vec3 shadow = getShadow(shadowScreenPos);
+	vec3 shadow = getSoftShadow(shadowClipPos);
 	vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = lightmap.y * skylightColor;
 	vec3 ambient = ambientColor;
