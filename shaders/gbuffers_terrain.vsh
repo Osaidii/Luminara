@@ -5,7 +5,7 @@ out vec2 texcoord;
 out vec4 glcolor;
 out vec3 normal;
 
-uniform mat4 gbufferModelViewinverse;
+uniform mat4 gbufferModelViewInverse;
 
 void main() {
 	gl_Position = ftransform();
@@ -13,5 +13,5 @@ void main() {
 	lmcoord = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 	glcolor = gl_Color;
 	normal = gl_NormalMatrix * gl_Normal;
-	normal = normalize((gbufferModelViewinverse * vec4(gl_NormalMatrix * gl_Normal, 0.0)).xyz);
+	normal = mat3(gbufferModelViewInverse) * normal;
 }
