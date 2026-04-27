@@ -1,10 +1,13 @@
 #version 330 compatibility
+#include "libs/shadowDistort.glsl"
 
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 uniform sampler2D colortex2;
 uniform sampler2D depthtex0;
 uniform sampler2D shadowtex0;
+uniform sampler2D shadowtex1;
+uniform sampler2D shadowColor0;
 
 uniform mat4 gbufferProjectionInverse;
 uniform mat4 gbufferModelViewInverse;
@@ -22,6 +25,8 @@ const vec3 skylightColor = vec3(0.05, 0.15, 0.3);
 const vec3 sunlightColor = vec3(1.0);
 const vec3 ambientColor = vec3(0.1);
 
+const float shadowDistanceRenderMul = 1.0;
+
 in vec2 texcoord;
 
 /* RENDERTARGETS: 0 */
@@ -30,6 +35,19 @@ layout(location = 0) out vec4 color;
 vec3 projectAndDivide(mat4 projectionMatrix, vec3 position){
     vec4 homPos = projectionMatrix * vec4(position, 1.0);
     return homPos.xyz / homPos.w;
+}
+
+vec3 getShadow(vec3 shadowScreenPos) {
+    float trasnparentShadow = step(shadowScreenPos.z, texture(shadowtex1, shadowScreenPos.xy).r);
+    if (trasnparentShadow == 1.0) {
+        return vec3(1.0);
+    }
+    float opaqueShadow = step(shadowScreenPos.z, texture(shadowtex0, shadowScreenPos.xy).r);
+    if (opaqueShadow == 0.0) {
+        return vec3(0.0);
+    }
+    vec4 shadowColor = texture(shadowColor0, shadowScreenPos.xy);
+    return shadowColor.rgb * (1.0 - shadowColor.a);
 }
 
 void main() {
@@ -50,9 +68,10 @@ void main() {
     vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
     vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
     shadowClipPos -= 0.001;
+    shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
     vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
     vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
-    float shadow = step(shadowScreenPos.z, texture(shadowtex0, shadowScreenPos.xy).r);
+    vec3 shadow = getShadow(shadowScreenPos);
     vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = lightmap.y * skylightColor;
 	vec3 ambient = ambientColor;
