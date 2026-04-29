@@ -12,6 +12,8 @@ uniform sampler2D shadowtex1;
 uniform sampler2D shadowColor0;
 uniform sampler2D noisetex;
 
+uniform int worldtime;
+
 uniform float shadowMapResolution;
 uniform float viewWidth;
 uniform float viewHeight;
@@ -78,7 +80,7 @@ vec3 getSoftShadow(vec4 shadowClipPos) {
             offset = rotation * offset;
             offset /= shadowMapResolution;
             vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
-            offsetShadowClipPos.z -= 0.001;
+            //offsetShadowClipPos.z -= 0.001;
             offsetShadowClipPos.xyz = distortShadowClipPos(offsetShadowClipPos.xyz);
             vec3 shadowNDCPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
             vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
@@ -110,9 +112,11 @@ void main() {
     vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
     vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
     vec3 shadow = getShadow(shadowScreenPos);
+    //vec3 shadow = getSoftShadow(shadowClipPos);
     vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = lightmap.y * skylightColor;
-	vec3 ambient = ambientColor;
+	float night = 1.0 - lightmap.y;
+    vec3 ambient = ambientColor * night;
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
     color.rgb *= blocklight + skylight + ambient + sunlight;
 }
