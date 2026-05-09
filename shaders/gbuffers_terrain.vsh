@@ -5,11 +5,12 @@ out vec2 texcoord;
 out vec4 glcolor;
 out vec3 normal;
 
-in vec3 vaPosition; 
+in vec3 VAPosition; 
 
 uniform sampler2D noisetex;
 
 uniform mat4 gbufferModelViewInverse;
+uniform mat4 gbufferProjectionInverse;
 uniform vec3 cameraPosition;
 uniform float frameTimeCounter;
 
@@ -20,17 +21,18 @@ in vec2 mc_Entity;
 
 void main() {
 	vec3 position = gl_Vertex.xyz;
-	vec4 worldPos = modelViewMatrix * vec4(vaPosition, 1.0);
+	vec4 viewPos = modelViewMatrix * vec4(VAPosition, 1.0);
+	vec3 worldPos = (gbufferProjectionInverse * viewPos).xyz + cameraPosition;
 	bool leaf_foliage = false;
 	bool bush_foliage = false;
 	bool crop_foliage = false;
 	float diffx = cameraPosition.x - worldPos.x;
 	float diffz = cameraPosition.z - worldPos.z;
-	//if (abs(diffx) < 30.0 && abs(diffz) < 30.0) {
+	if (abs(diffx) < 30.0 && abs(diffz) < 30.0) {
 		leaf_foliage = mc_Entity.x >= 1001.0 && mc_Entity.x <= 1011.0;
 		bush_foliage = mc_Entity.x >= 2001.0 && mc_Entity.x <= 2029.0;
 		crop_foliage = mc_Entity.x >= 3001.0 && mc_Entity.x <= 3012.0;
-	//} need to fix worldpos here, its not correct
+	}
 	if (leaf_foliage || bush_foliage || crop_foliage) {
 		float height = (position.y + 1.0) / 2.0;
 		float movementAmount = 0.1 + height * 0.3;
