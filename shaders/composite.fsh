@@ -9,7 +9,7 @@ uniform sampler2D colortex2;
 uniform sampler2D depthtex0;
 uniform sampler2D shadowtex0;
 uniform sampler2D shadowtex1;
-uniform sampler2D shadowColor0;
+uniform sampler2D shadowcolor0;
 uniform sampler2D noisetex;
 
 uniform int worldTime;
@@ -26,15 +26,11 @@ uniform mat4 shadowProjection;
 
 uniform vec3 shadowLightPosition;
 
- /*
- const int colortex0Format = RGB16;
- */
-
 const vec3 blocklightColor = vec3(1.0, 0.5, 0.08);
 const vec3 skylightColor = vec3(0.05, 0.15, 0.3);
 const vec3 sunlightColor = vec3(1.0);
 const vec3 ambientColor = vec3(0.1);
-const vec3 rainLight = vec3(0.5);
+const vec3 rainColor = vec3(0.2);
 
 const float shadowDistanceRenderMul = 1.0;
 
@@ -49,16 +45,12 @@ vec3 projectAndDivide(mat4 projectionMatrix, vec3 position){
 }
 
 vec3 getShadow(vec3 shadowScreenPos) {
-    float transparentShadow = step(shadowScreenPos.z, texture(shadowtex0, shadowScreenPos.xy).r);
-    if (transparentShadow == 1.0) {
-        return vec3(1.0);
-    }
-    float opaqueShadow = step(shadowScreenPos.z, texture(shadowtex1, shadowScreenPos.xy).r);
-    if (opaqueShadow == 0.0) {
+    float opaqueDepth = texture(shadowtex1, shadowScreenPos.xy).r;
+    if (shadowScreenPos.z > opaqueDepth) {
         return vec3(0.0);
     }
-    vec4 shadowColor = texture(shadowColor0, shadowScreenPos.xy);
-    return shadowColor.rgb * (1.0 - shadowColor.a);
+    vec4 shadowColor = texture(shadowcolor0, shadowScreenPos.xy);
+    return mix(shadowColor.rgb, vec3(1.0), shadowColor.a);
 }
 
 vec4 getNoise(vec2 coord) {
@@ -82,9 +74,9 @@ vec3 getSoftShadow(vec4 shadowClipPos) {
             offset /= shadowMapResolution;
             vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
             offsetShadowClipPos.xyz = distortShadowClipPos(offsetShadowClipPos.xyz);
+            offsetShadowClipPos.z -= 0.001;
             vec3 shadowNDCPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
             vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
-            offsetShadowClipPos.z -= 0.001;
             shadowAccum += getShadow(shadowScreenPos);
         }
     }
@@ -109,7 +101,7 @@ void main() {
     vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
     vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
     vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-    shadowClipPos.z -= 0.002;
+    shadowClipPos.z -= 0.0005;
     shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
     vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
     vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
@@ -118,14 +110,18 @@ void main() {
     vec3 skylight = vec3(0.0);
     vec3 shadow = vec3(0.0);
     //shadow = getShadow(shadowScreenPos);
-    if (worldTime <= 12785 || worldTime >= 22900) {
+    if ((worldTime <= 12785 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
         shadow = getShadow(shadowScreenPos);
-    } 
-	else {
-        skylight = lightmap.y * skylightColor;
     }
-    
+	else {
+        if (rainStrength > 0.1) {
+            skylight = lightmap.y * rainColor;
+        }
+        else {
+            skylight = lightmap.y * skylightColor;
+        }
+    }
 	float night = 1.0 - lightmap.y;
     vec3 ambient = ambientColor * night;
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
