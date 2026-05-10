@@ -35,9 +35,9 @@ void main() {
 	}
 	if (leaf_foliage || bush_foliage || crop_foliage) {
 		float height = (position.y + 1.0) / 2.0;
-		float movementAmount = 0.1 + height * 0.3;
-		float offsetX = position.y * 1.8 + position.z * 0.9;
-		float offsetZ = position.y * 1.5 + position.x * 1.0;
+		float movementAmount = 0.1 + height * 0.2;
+	float offsetX = worldPos.x * 0.6 + worldPos.z * 0.4;
+	float offsetZ = worldPos.x * 0.4 + worldPos.z * 0.6;
 		float swayX = sin((frameTimeCounter * 1.8) + offsetX) * 0.11;
 		float swayZ = cos((frameTimeCounter * 1.5) + offsetZ) * 0.09;
 		position.x += swayX * movementAmount;

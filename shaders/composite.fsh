@@ -59,28 +59,36 @@ vec4 getNoise(vec2 coord) {
     return texelFetch(noisetex, noiseCoord, 0);
 }
 
-vec3 getSoftShadow(vec4 shadowClipPos) {
+vec3 getSoftShadow(vec4 shadowClipPos)
+{
     float noise = getNoise(texcoord).r;
-    float theta =  noise * radians(360.0);
-    float cosTheta = cos(theta);
-    float sinTheta = sin(theta);
-    mat2 rotation = mat2(cosTheta, -sinTheta, sinTheta, cosTheta);
+    float theta = noise * radians(360.0);
+    mat2 rotation = mat2(
+        cos(theta), -sin(theta),
+        sin(theta),  cos(theta)
+    );
+
+    vec3 base = shadowClipPos.xyz / shadowClipPos.w;
+    vec3 baseUV = base * 0.5 + 0.5;
+
     vec3 shadowAccum = vec3(0.0);
-    const int samples = SHADOW_RANGE  * SHADOW_RANGE  * 4;
-    for(int x = -SHADOW_RANGE; x < SHADOW_RANGE; x++) {
-        for(int y = -SHADOW_RANGE; y < SHADOW_RANGE; y++) {
-            vec2 offset = vec2(x, y) * SHADOW_RADIUS / float(SHADOW_RANGE);
+    int samples = 0;
+
+    for(int x = -SHADOW_RANGE; x <= SHADOW_RANGE; x++) {
+        for(int y = -SHADOW_RANGE; y <= SHADOW_RANGE; y++) {
+
+            vec2 offset = vec2(x, y);
             offset = rotation * offset;
-            offset /= shadowMapResolution;
-            vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
-            offsetShadowClipPos.xyz = distortShadowClipPos(offsetShadowClipPos.xyz);
-            offsetShadowClipPos.z -= 0.001;
-            vec3 shadowNDCPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
-            vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
-            shadowAccum += getShadow(shadowScreenPos);
+            offset *= SHADOW_RADIUS / shadowMapResolution;
+
+            vec3 sampleUV = baseUV;
+            sampleUV.xy += offset;
+
+            shadowAccum += getShadow(sampleUV);
+            samples++;
         }
     }
-    
+
     return shadowAccum / float(samples);
 }
 
@@ -101,17 +109,16 @@ void main() {
     vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
     vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
     vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-    shadowClipPos.z -= 0.0005;
+    shadowClipPos.z -= 0.002;
     shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
     vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
     vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
-    //vec3 shadow = getSoftShadow(shadowClipPos);
     vec3 blocklight = lightmap.x * blocklightColor;
     vec3 skylight = vec3(0.0);
     vec3 shadow = vec3(0.0);
-    //shadow = getShadow(shadowScreenPos);
     if ((worldTime <= 12785 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
+        //shadow = getSoftShadow(shadowClipPos);
         shadow = getShadow(shadowScreenPos);
     }
 	else {
