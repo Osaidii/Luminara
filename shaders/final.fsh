@@ -1,6 +1,7 @@
 #version 330 compatibility
 
 uniform sampler2D colortex0;
+uniform sampler2D shadowtex0;
 
 in vec2 texcoord;
 
