@@ -37,6 +37,7 @@ const vec3 skylightColor = vec3(0.05, 0.15, 0.3);
 const vec3 sunlightColor = vec3(1.0);
 const vec3 ambientColor = vec3(0.1);
 const vec3 rainColor = vec3(0.2);
+const vec3 nightAmbientColor = vec3(0.3);
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
@@ -116,10 +117,12 @@ void main() {
 	vec3 shadow = vec3(0.0);
 	vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = vec3(0.0);
+	vec3 ambient = vec3(0.0);
 	if ((worldTime <= 12700 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
         //shadow = getSoftShadow(shadowClipPos);
         shadow = getShadow(shadowScreenPos);
+		ambient = ambientColor;
     }
 	else {
         if (rainStrength > 0.1) {
@@ -128,9 +131,9 @@ void main() {
         else {
             skylight = lightmap.y * skylightColor;
         }
+		ambient = nightAmbientColor;
     }
-	float night = 1.0 - lightmap.y;
-    vec3 ambient = ambientColor * night;
+    ambient *= 0.3;
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
 	color.rgb *= blocklight + skylight + ambient + sunlight;
 	if (isEyeInWater == 1) {

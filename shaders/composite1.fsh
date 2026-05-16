@@ -2,7 +2,8 @@
 
 uniform sampler2D colortex0;
 uniform sampler2D depthtex0;
-
+uniform int viewHeight;
+uniform int viewWidth;
 uniform mat4 gbufferProjectionInverse;
 uniform vec3 fogColor;
 uniform float far;
@@ -30,4 +31,7 @@ void main() {
 	float dist = length(viewPos) / far;
 	float fogFactor = exp(-fog_density * (1.0 - dist));
 	color.rgb = mix(color.rgb, pow(fogColor, vec3(2.2)), clamp(fogFactor, 0.0, 1.0));
+	vec2 pixel = 1.0 / vec2(viewWidth, viewHeight);
+	vec3 bloom = vec3(0.0);
+	color.rgb += bloom * 0.3;
 }
