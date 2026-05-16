@@ -140,4 +140,16 @@ void main() {
 		color.rgb *= vec3(0.4, 0.7, 1.0);
 		skylight *= 1.5;
 	}
+	else if (isEyeInWater == 2) {
+		float lavaFog = exp(-length(viewPos) * 0.8);
+		vec3 lavaColor = vec3(0.85, 0.18, 0.02);
+		color.rgb = mix(lavaColor, color.rgb, lavaFog);
+		color.rgb *= vec3(0.9, 0.3, 0.1);
+	}
+	else if (isEyeInWater == 3) {
+		float snowFog = exp(-length(viewPos) * 0.5);
+		vec3 snowColor = vec3(0.85, 0.85, 0.85);
+		color.rgb = mix(snowColor, color.rgb, snowFog);
+		color.rgb *= vec3(0.85, 0.85, 0.85);
+	}
 }
