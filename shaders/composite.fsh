@@ -23,6 +23,7 @@ uniform mat4 shadowModelView;
 uniform mat4 shadowProjection;
 uniform int shadowMapResolution;
 uniform int worldTime;
+uniform int isEyeInWater;
 uniform float viewWidth;
 uniform float viewHeight;
 uniform float rainStrength;
@@ -132,4 +133,11 @@ void main() {
     vec3 ambient = ambientColor * night;
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
 	color.rgb *= blocklight + skylight + ambient + sunlight;
+	if (isEyeInWater == 1) {
+		float waterFog = exp(-length(viewPos) * 0.015);
+		vec3 waterColor = vec3(0.0, 0.35, 0.65);
+		color.rgb = mix(waterColor, color.rgb, waterFog);
+		color.rgb *= vec3(0.4, 0.7, 1.0);
+		skylight *= 1.5;
+	}
 }
