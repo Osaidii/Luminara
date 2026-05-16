@@ -3,6 +3,7 @@
 uniform sampler2D lightmap;
 uniform sampler2D gtexture;
 uniform vec4 entityColor;
+uniform int worldTime;
 
 uniform float alphaTestRef = 0.1;
 
@@ -20,4 +21,8 @@ void main() {
 	if (color.a < alphaTestRef) {
 		discard;
 	}
+	float night = 1.0 - smoothstep(12000.0, 14000.0, float(worldTime));
+    night += smoothstep(22000.0, 24000.0, float(worldTime));
+    float multiplier = mix(1.8, 2.2, night);
+	color.rgb *= multiplier;
 }

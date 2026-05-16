@@ -116,8 +116,8 @@ void main() {
 	vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
 	vec3 shadow = vec3(0.0);
 	vec3 blocklight = lightmap.x * blocklightColor;
-	vec3 skylight = vec3(0.0);
-	vec3 ambient = vec3(0.0);
+	vec3 skylight = lightmap.y * skylightColor;
+	vec3 ambient = ambientColor;
 	if ((worldTime <= 12700 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
         //shadow = getSoftShadow(shadowClipPos);
