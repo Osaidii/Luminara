@@ -137,9 +137,10 @@ void main() {
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
 	color.rgb *= blocklight + skylight + ambient + sunlight;
 	if (isEyeInWater == 1) {
-		float waterFog = exp(-length(viewPos) * 0.015);
+		float dist = length(viewPos) / 64.0;
+		float waterFog = exp(-6.0 * dist);
 		vec3 waterColor = vec3(0.0, 0.35, 0.65);
-		color.rgb = mix(waterColor, color.rgb, waterFog);
+		color.rgb = mix(waterColor, color.rgb, clamp(waterFog, 0.0, 1.0));
 		color.rgb *= vec3(0.4, 0.7, 1.0);
 		skylight *= 1.5;
 	}
