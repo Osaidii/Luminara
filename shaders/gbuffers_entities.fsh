@@ -28,9 +28,17 @@ void main() {
 	}
 	float night = 0.0;
 	if (worldTime >= 12700 && worldTime <= 22900) {
-		night = 1.0 - smoothstep(12000.0, 14000.0, float(worldTime));
+		night = smoothstep(12000.0, 14000.0, float(worldTime));
 		night += smoothstep(22000.0, 24000.0, float(worldTime));
 		night = clamp(night, 0.0, 1.0);
+	}
+	float lightInSky = texture(lightmap, lmcoord).y;
+	bool isCave = false;
+	if (lightInSky < 0.05) {
+		isCave = true;
+	}
+	if (isCave) {
+		color.rgb = vec3(1.0);
 	}
     float multiplier = mix(1.0, 2.0, night);
 	color.rgb *= multiplier;

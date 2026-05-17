@@ -34,9 +34,9 @@ void main() {
 		crop_foliage = mc_Entity.x >= 3001.0 && mc_Entity.x <= 3012.0;
 	}
 	if (leaf_foliage || bush_foliage || crop_foliage) {
-		float movementAmount = 0.1;
-	float offsetX = worldPos.x * 0.7 + worldPos.z * 0.5;
-	float offsetZ = worldPos.x * 0.5 + worldPos.z * 0.7;
+		float movementAmount = 0.15;
+	float offsetX = worldPos.x * 0.8 + worldPos.z * 0.6;
+	float offsetZ = worldPos.x * 0.6 + worldPos.z * 0.8;
 		float swayX = sin((frameTimeCounter * 1.8) + offsetX) * 0.11;
 		float swayZ = cos((frameTimeCounter * 1.5) + offsetZ) * 0.09;
 		position.x += swayX * movementAmount;
