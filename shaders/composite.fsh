@@ -1,6 +1,6 @@
 #version 330 compatibility
 #include "libs/shadowDistort.glsl"
-#define SHADOW_RANGE 4
+#define SHADOW_RANGE 2
 #define SHADOW_RADIUS 1
 
 uniform sampler2D colortex0;
@@ -13,7 +13,9 @@ uniform sampler2D shadowcolor0;
 uniform sampler2D noisetex;
 
 /*
-cosnt int colortex0Format = RGB16;
+const int colortex0Format = RGBA16F;
+const int colortex1Format = RGBA16F;
+const int colortex2Format = RGBA16F;
 */
 
 uniform vec3 shadowLightPosition;
@@ -41,8 +43,6 @@ const vec3 nightAmbientColor = vec3(0.3);
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
-layout(location = 1) out vec4 lightmapData;
-layout(location = 2) out vec4 encodedNormal;
 
 vec3 projectAndDivide(mat4 projectionMatrix, vec3 position){
     vec4 homPos = projectionMatrix * vec4(position, 1.0);
@@ -110,18 +110,18 @@ void main() {
 	vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
 	//vec3 shadow = getSoftShadow(shadowClipPos);
-	shadowClipPos.z -= 0.002;
-	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
-	vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
-	vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
+	//shadowClipPos.z -= 0.002;
+	//shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
+	//vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
+	//vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
 	vec3 shadow = vec3(0.0);
 	vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = lightmap.y * skylightColor;
 	vec3 ambient = ambientColor;
 	if ((worldTime <= 12700 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
-        //shadow = getSoftShadow(shadowClipPos);
-        shadow = getShadow(shadowScreenPos);
+        shadow = getSoftShadow(shadowClipPos);
+        //shadow = getShadow(shadowScreenPos);
 		ambient = ambientColor;
     }
 	else {
@@ -137,10 +137,9 @@ void main() {
 	vec3 sunlight = sunlightColor * clamp(dot(worldLightVector, normal), 0.0, 1.0) * shadow;
 	color.rgb *= blocklight + skylight + ambient + sunlight;
 	if (isEyeInWater == 1) {
-		float dist = length(viewPos) / 64.0;
-		float waterFog = exp(-6.0 * dist);
+		float waterFog = exp(-length(viewPos) * 0.015);
 		vec3 waterColor = vec3(0.0, 0.35, 0.65);
-		color.rgb = mix(waterColor, color.rgb, clamp(waterFog, 0.0, 1.0));
+		color.rgb = mix(waterColor, color.rgb, waterFog);
 		color.rgb *= vec3(0.4, 0.7, 1.0);
 		skylight *= 1.5;
 	}
@@ -156,4 +155,5 @@ void main() {
 		color.rgb = mix(snowColor, color.rgb, snowFog);
 		color.rgb *= vec3(0.85, 0.85, 0.85);
 	}
+	color = vec4(color.rgb, 1.0);
 }
