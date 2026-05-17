@@ -81,7 +81,7 @@ vec3 getSoftShadow(vec4 shadowClipPos) {
             vec2 offset = vec2(x, y) * (SHADOW_RADIUS / 8092.0);
             offset = rotation * offset;
             vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
-            offsetShadowClipPos.z -= 0.001;
+			shadowClipPos.z -= 0.001;
             offsetShadowClipPos.xyz = distortShadowClipPos(offsetShadowClipPos.xyz);
             vec3 shadowNDCPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
             vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
@@ -113,10 +113,6 @@ void main() {
 	vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
 	vec3 shadowViewPos = (shadowModelView * vec4(feetPlayerPos, 1.0)).xyz;
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	//shadowClipPos.z -= 0.002;
-	//shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
-	//vec3 shadowNDCPos = shadowClipPos.xyz / shadowClipPos.w;
-	//vec3 shadowScreenPos = shadowNDCPos * 0.5 + 0.5;
 	vec3 shadow = vec3(0.0);
 	vec3 blocklight = lightmap.x * blocklightColor;
 	vec3 skylight = lightmap.y * skylightColor;
@@ -124,7 +120,6 @@ void main() {
 	if ((worldTime <= 12700 || worldTime >= 22900) && rainStrength == 0.0) {
         skylight = lightmap.y * skylightColor;
         shadow = getSoftShadow(shadowClipPos);
-        //shadow = getShadow(shadowScreenPos);
 		ambient = ambientColor;
     }
 	else {
